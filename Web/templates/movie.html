@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load bootstrap4 %}
+{% block head %}영화 상세보기{% endblock %}
+{% block content %}
+{% block body %}
+<div class="backdrop row m-0 my-5">
+  <div class="col-12 col-md-3 align-self-center" style="height: 100%;">
+    <img src="https://image.tmdb.org/t/p/w500{{movie.poster_path}}" onerror="this.src='{% static 'img/4.jpg' %}'" id="poster-img"  style="width: 100%;" alt="...">
+  </div>
+  
+  <div class="col-12 col-md-9 text-dark">
+    <h3 class="mt-3 custom-break-word">{{ movie.title }}</h3>
+    <div class="custom-break-word">제목 : {{ movie.title }}</div>
+    <hr>
+    <pre class="custom-break-word">{{ movie.title }}</pre>
+    <hr>
+    <div>개봉일 : {{ movie.date }}</div>
+    <div class="custom-break-word">장르 : {{ movie.genres }}</div>
+    <div>언어 : {{ movie.world }}</div>
+    <div>평점 : {{ movie.vote_average }}</div>
+    <div>줄거리 :{{ movie.summary }}</div>
+    <hr style="border: solid 1px black;">
+    <!--<span class="cnt-{{movie.pk}}">{{ movie.like_users.all|length }}</span> 명이 이 영화를 좋아합니다.-->
+    <hr>
+</div>
+    <br>
+  {% if user_id.is_authenticated %}
+<div class="py-3">
+  {% if avr == 0 %}
+  <div class="h5">첫번째로 리뷰를 작성해주세요!</div>
+  {% else %}
+  <h5>총 평점: {{ avr }}/5.0</h5>
+  {% endif %}
+<hr style="border: solid 1px black;">
+  {% for review in reviews %}
+  {% if user == review.user and updating == 'true' %}
+  <div></div>
+  {% else %}
+  <div class="border-bottom p-3" style="background-color: rgba(255, 255, 255, 0.1); border-color: darkslategray !important;">
+    <div>
+      <div class="d-inline-block" style="h6">
+        {% if review.star == 1 %}
+        ★☆☆☆☆
+        {% elif review.star == 2 %}
+        ★★☆☆☆
+        {% elif review.star == 3 %}
+        ★★★☆☆
+        {% elif review.star == 4 %}
+        ★★★★☆
+        {% else %}
+        ★★★★★
+        {% endif %}
+      </div>
+      <div class="d-inline-block custom-break-word">{{ review.user }}</div>
+    </div>
+    <hr>
+    <pre class="custom-break-word">{{ review.content }}</pre>
+    <hr>
+    <div class="text-right">
+      <div><small>작성:{{ review.created_at }}</small></div>
+      <div><small>수정:{{ review.updated_at }}</small></div>
+    </div>
+
+    {% if user == review.user %}
+    <div class="text-right">
+      <form action="{% url 'movies:delete_review' movie.pk review.pk %}" method="POST">
+        <a href="{% url 'movies:update_review' movie.pk review.pk %}" class="square_btn">수정</a>
+        {% csrf_token %}
+        <input type="submit" class="square_btn" value="삭제">
+      </form>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+  {% endfor %}
+</div>
+
+    {% if lock == 'false' %}
+  {% if updating == 'true' %}
+  <div id="bookmark"></div>
+  {% else %}
+  <div></div>
+  {% endif %}
+
+  <form class="mb-5" action="" method="POST">
+    {% csrf_token %}
+    {% bootstrap_form form %}
+    <!--{% include 'includes/form.html' %}-->
+      <button class="mt-2 btn btn-info">글쓰기</button>
+  </form>
+<div class="mb-5 mt-2 text-center">
+  리뷰는 한 번만 작성하실 수 있습니다.
+</div>
+ {% endif %}
+  <p align="center">{{ user.username }}님께 예측평점과 함께 추천해드리는 영화 목록입니다.</p>
+  <section class="py-5">
+            <div class="container px-4 px-lg-5 mt-5">
+                <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
+                    <div class="col mb-5">
+                        <div class="card h-100">
+                            <!-- Product image-->
+                            <img class="card-img-top" src="../static/img/4.jpg" alt="..." />
+                            <!-- Product details-->
+                            <div class="card-body p-4">
+                                <div class="text-center">
+                                    <!-- Product name-->
+                                    <h5 class="fw-bolder">백두산</h5>
+                                  <h5>예측 평점</h5>
+                                    <div class="d-flex justify-content-center small text-warning mb-2">
+                                        <div class="bi-star-fill"></div>
+                                        <div class="bi-star-fill"></div>
+                                        <div class="bi-star-fill"></div>
+                                        <div class="bi-star-fill"></div>
+                            </div>
+                                </div>
+                            </div>
+                            <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
+                                <div class="text-center"><a class="btn btn-outline-dark mt-auto" href="movie">상세보기</a></div>
+                            </div>
+                        </div>
+                    </div>
+                  <div class="col mb-5">
+                        <div class="card h-100">
+                            <!-- Product image-->
+                            <img class="card-img-top" src="../static/img/4.jpg" alt="..." />
+                            <!-- Product details-->
+                            <div class="card-body p-4">
+                                <div class="text-center">
+                                    <!-- Product name-->
+                                    <h5 class="fw-bolder">백두산</h5>
+                                  <h5>예측 평점</h5>
+                                    <div class="d-flex justify-content-center small text-warning mb-2">
+                                        <div class="bi-star-fill"></div>
+                                        <div class="bi-star-fill"></div>
+                                        <div class="bi-star-fill"></div>
+                                        <div class="bi-star-fill"></div>
+                            </div>
+                                </div>
+                            </div>
+                            <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
+                                <div class="text-center"><a class="btn btn-outline-dark mt-auto" href="movie">상세보기</a></div>
+                            </div>
+                        </div>
+                    </div>
+                  <div class="col mb-5">
+                        <div class="card h-100">
+                            <!-- Product image-->
+                            <img class="card-img-top" src="../static/img/4.jpg" alt="..." />
+                            <!-- Product details-->
+                            <div class="card-body p-4">
+                                <div class="text-center">
+                                    <!-- Product name-->
+                                    <h5 class="fw-bolder">백두산</h5>
+                                  <h5>예측 평점</h5>
+                                    <div class="d-flex justify-content-center small text-warning mb-2">
+                                        <div class="bi-star-fill"></div>
+                                        <div class="bi-star-fill"></div>
+                                        <div class="bi-star-fill"></div>
+                                        <div class="bi-star-fill"></div>
+                            </div>
+                                </div>
+                            </div>
+                            <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
+                                <div class="text-center"><a class="btn btn-outline-dark mt-auto" href="movie">상세보기</a></div>
+                            </div>
+                        </div>
+                    </div>
+                  <div class="col mb-5">
+                        <div class="card h-100">
+                            <!-- Product image-->
+                            <img class="card-img-top" src="../static/img/4.jpg" alt="..." />
+                            <!-- Product details-->
+                            <div class="card-body p-4">
+                                <div class="text-center">
+                                    <!-- Product name-->
+                                    <h5 class="fw-bolder">백두산</h5>
+                                  <h5>예측 평점</h5>
+                                    <div class="d-flex justify-content-center small text-warning mb-2">
+                                        <div class="bi-star-fill"></div>
+                                        <div class="bi-star-fill"></div>
+                                        <div class="bi-star-fill"></div>
+                                        <div class="bi-star-fill"></div>
+                            </div>
+                                </div>
+                            </div>
+                            <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
+                                <div class="text-center"><a class="btn btn-outline-dark mt-auto" href="movie">상세보기</a></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+      <div style="display: flex; justify-content: center;">
+             <button type="button" onclick="location.href='{% url 'home' %}' ">홈으로</button>
+        </div>
+  </section>
+{% endif %}
+{% endblock body %}
+
+<style>
+
+  .backdrop {
+    position: relative;
+    background-color: rgba(255, 255, 255, 0.7);
+    
+  }
+  .backdrop::after {
+    content: "";
+    
+    background: url('{{ backdrop_path }}') no-repeat;
+    background-size: cover;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    position: absolute;
+    z-index: -1;   
+  }
+
+</style>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script>
+  var img = document.getElementById('poster-img')
+  if (img.src.slice(31,img.src.length).indexOf('/') !== 0 ) {
+    img.src = img.src.slice(31,img.src.length)
+  }
+
+  const likeBtns = document.querySelectorAll('.like-btn')
+  likeBtns.forEach(function(btn) {
+    btn.addEventListener('mouseover', function(event) {
+      btn.getElementsByTagName('i')[0].classList.add('animate__animated', 'animate__rubberBand')
+
+    })
+    btn.addEventListener('mouseout', function(event) {
+      btn.getElementsByTagName('i')[0].classList.remove('animate__animated', 'animate__rubberBand')
+
+    })
+    btn.addEventListener('click', function(event) {
+      axios.get(`/movies/${btn.dataset.pk}/like`)
+        .then(function(res) {
+          if (res.data.liked) {
+            btn.getElementsByTagName('i')[0].style.color = 'crimson'
+          } else {
+            btn.getElementsByTagName('i')[0].style.color = 'white'
+          }
+          const cntSpan = document.querySelector(`.cnt-${btn.dataset.pk}`)
+          if (res.data.count) {
+            cntSpan.innerText = res.data.count
+          } else {
+
+            cntSpan.innerText = 0
+          }
+
+        })
+        .catch(function(err) {
+          console.log(err)
+        })
+    })
+  })
+
+  function getOffsetTop(el) {
+    var top = 0;
+    if (el.offsetParent) {
+      do {
+        top += el.offsetTop;
+      } while (el = el.offsetParent);
+      return [top];
+    }
+  }
+  window.scroll(0, getOffsetTop(document.getElementById("bookmark")));
+
+</script>
+
+{% endblock %}</title>
+</head>
+<body>
+
+</body>
+</html>
