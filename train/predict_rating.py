@@ -35,9 +35,10 @@ class Predict:
         # 정수 인코딩
         tokenizer = Tokenizer()
         tokenizer.fit_on_texts(X_lis)
+        X = tokenizer.texts_to_sequences(X_lis)
 
         # 독립변수 패딩
-        X = pad_sequences(X, maxlen = len(X))
+        X = pad_sequences(X, maxlen=300)
 
         return X
 
