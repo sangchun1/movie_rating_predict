@@ -7,6 +7,7 @@ from keras import models
 from keras import layers
 from keras.callbacks import EarlyStopping
 from keras.models import load_model
+from datetime import datetime
 
 class Recommend:
     def __init__(self, db, user_id):
@@ -15,17 +16,96 @@ class Recommend:
 
     # 날짜를 넣으면 기준일로부터 개봉한지 몇일 됐는지 출력
     def change_date(self, date):
-        
-        return time
+        now = datetime.now() # 현재 날짜와 시간 얻기
+
+        if len(date) == 11: # 양식이 '2023.06.04.' 일때
+            compare_date = datetime.strptime(date, '%Y.%m.%d.')
+            time_difference = now - compare_date # 날짜 차이 계산
+            day = time_difference.days # 차이를 일수로 변환
+
+        elif len(date) == 10: # 양식이 '2023-06-04' 일때
+            compare_date = datetime.strptime(date, '%Y-%m-%d')
+            time_difference = now - compare_date
+            day = time_difference.days
+
+        elif len(date) == 8:
+            add_day = date + '01.' # 양식이 '2023.06.' 일때
+            compare_date = datetime.strptime(add_day, '%Y.%m.%d.')
+            time_difference = now - compare_date
+            day = time_difference.days
+            
+        else:
+            add_day = date + '.01.01.' # 양식이 '2023' 일때
+            compare_date = datetime.strptime(add_day, '%Y.%m.%d.')
+            time_difference = now - compare_date
+            day = time_difference.days
+        return day
     
     # 국가 단순화
     def change_country(self, country):
         # 한국, 미국, 서양, 아시아, 기타
+        if country == '대한민국' or country == '한국':
+            country = '한국'
+        elif country == '미국':
+            country = '미국'
+        elif country == '일본':
+            country = '일본'
+        elif country == '대만' or country == '말레이시아' or country == '필리핀' or country == '베트남' or country == '타이' or country == '중국' or country == '미얀마' or country == '이란' or country == '홍콩' or country == '싱가포르' or country == '아프가니스탄' or country == '인도네시아':
+            country = '아시아'
+        elif country == '영국' or country == '벨기에' or country == '프랑스' or country == '덴마크' or country == '독일' or country == '독일(구 서독)' or country == '아일랜드' or country == '이탈리아' or country == '슬로베니아' or country == '에스토니아' or country == '스위스' or country == '크로아티아' or country == '슬로바키아' or country == '체코' or country == '루마니아' or country == '스페인' or country == '폴란드' or country == '네덜란드' or country == '리투아니아' or country == '스웨덴' or country == '불가리아' or country == '룩셈부르크' or country == '그리스' or country == '포르투갈' or country == '그린란드':
+            country = '유럽'
+        else:
+            country = '기타'
         return country
     
     # 장르 단순화
     def change_genre(self, genres):
-        # 제일 많은거 3-5, 기타
+        # 16 종류 및 기타
+        genre_list = []
+
+        try:
+            g_split = genres.split(', ')
+        except:
+            g_split = genres.split(',')
+        finally:
+            for g in g_split:
+                if g == '어드벤처' or g == '모험' or g == '서사':
+                    g = '모험'
+                elif g == '범죄':
+                    g = '범죄'
+                elif g == '코미디' or g == '블랙코미디':
+                    g = '코미디'
+                elif g == 'SF':
+                    g = 'SF'
+                elif g == '판타지':
+                    g = '판타지'
+                elif g == '애니메이션':
+                    g = '애니메이션'
+                elif g == '멜로/로맨스':
+                    g = '멜로/로맨스'
+                elif g == '스릴러' or g == '서스펜스':
+                    g = '스릴러'
+                elif g == '공포' or g == '공포(호러)':
+                    g = '공포'
+                elif g == '느와르':
+                    g = '느와르'
+                elif g == '무협':
+                    g = '무협'
+                elif g == '드라마' or g == '가족':
+                    g = '드라마'
+                elif g == '액션':
+                    g = '액션'
+                elif g == '미스터리':
+                    g = '미스터리'
+                elif g == '뮤지컬' or g == '공연실황' or g == '공연' or g == '락' or g == '발라드' or g == '댄스' or g == '트로트':
+                    g = '뮤지컬'
+                elif g == '전쟁':
+                    g = '전쟁'
+                else:
+                    g = '기타'
+                genre_list.append(g)
+                genres = list(set(genre_list)) # 리스트로 반환
+                # genres = ', '.join(genres) # 문자열로 반환
         return genres
     
     # 배우
