@@ -19,8 +19,10 @@ df.reset_index(inplace=True, drop=True)
 random_indices = random.sample(range(len(df)), k=500)
 temp = df.loc[random_indices]
 temp.drop_duplicates(subset=['영화ID'], inplace=True)
+temp.reset_index(inplace=True, drop=True)
 random_indices = random.sample(range(len(temp)), k=200)
 df_random = temp.loc[random_indices]
+df_random.reset_index(inplace=True, drop=True)
 
 # SQL 테이블로 넣을 수 있도록 수정
 df_random = df_random.drop(['영화명', '평균평점'], axis=1).rename({'실제평점':'rating', '리뷰':'review', '영화ID':'movie_id'}, axis=1)

@@ -1,0 +1,3 @@
+[console_scripts]
+demo = premium.demo:entry
+zz = premium.zz:main
