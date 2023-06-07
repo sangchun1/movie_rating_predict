@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block head %}고객센터{% endblock %}
+{% block content %}
+{% block body %}
+<br>
+<h1 align="center">문제가 발생하셨나요?</h1>
+<br>
+<h2 align="center">문의는 010-xxxx-xxxx로 연락주시면 최대한 빨리 처리해 드리겠습니다.</h2>
+<br>
+<h2 align="center">감사합니다.</h2>
+<hr style="border: solid 1px blue;">
+<br>
+<h1 align="center">Having a problem?</h1>
+<br>
+<h2 align="center">For inquiries, please contact us at 010-xxxx-xxxx and we will handle it as soon as possible.</h2>
+<br>
+<h2 align="center">Thanks</h2>
+<hr style="border: solid 1px blue;">
+<br>
+<h1 align="center">問題が発生しましたか？</h1>
+<br>
+<h2 align="center">お問い合わせは010-xxxx-xxxxでご連絡いただければ、できるだけ早く処理させていただきます。</h2>
+<br>
+<h2 align="center">ありがとうございます。</h2>
+<hr style="border: solid 1px blue;">
+<br>
+<div style="display: flex; justify-content: center;">
+             <button type="button" onclick="location.href='{% url 'home' %}' ">홈으로</button>
+        </div>
+<br>
+
+{% endblock body %}
+{% endblock %}
