@@ -43,7 +43,7 @@ class Recommend:
     
     # 국가 단순화
     def change_country(self, country):
-        # 한국, 미국, 서양, 아시아, 기타
+        # 한국, 미국, 일본, 유럽, 아시아, 기타
         if country == '대한민국' or country == '한국':
             country = '한국'
         elif country == '미국':
@@ -60,7 +60,7 @@ class Recommend:
     
     # 장르 단순화
     def change_genre(self, genres):
-        # 16 종류 및 기타
+        # 9 종류 및 기타
         genre_list = []
 
         try:
@@ -71,7 +71,7 @@ class Recommend:
             for g in g_split:
                 if g == '어드벤처' or g == '모험' or g == '서사':
                     g = '모험'
-                elif g == '범죄':
+                elif g == '범죄' or g == '느와르':
                     g = '범죄'
                 elif g == '코미디' or g == '블랙코미디':
                     g = '코미디'
@@ -79,28 +79,14 @@ class Recommend:
                     g = 'SF'
                 elif g == '판타지':
                     g = '판타지'
-                elif g == '애니메이션':
-                    g = '애니메이션'
-                elif g == '멜로/로맨스':
+                elif g == '멜로/로맨스' or g == '드라마' or g == '가족':
                     g = '멜로/로맨스'
                 elif g == '스릴러' or g == '서스펜스':
                     g = '스릴러'
                 elif g == '공포' or g == '공포(호러)':
                     g = '공포'
-                elif g == '느와르':
-                    g = '느와르'
-                elif g == '무협':
-                    g = '무협'
-                elif g == '드라마' or g == '가족':
-                    g = '드라마'
-                elif g == '액션':
+                elif g == '액션' or g == '무협':
                     g = '액션'
-                elif g == '미스터리':
-                    g = '미스터리'
-                elif g == '뮤지컬' or g == '공연실황' or g == '공연' or g == '락' or g == '발라드' or g == '댄스' or g == '트로트':
-                    g = '뮤지컬'
-                elif g == '전쟁':
-                    g = '전쟁'
                 else:
                     g = '기타'
                 genre_list.append(g)
