@@ -64,9 +64,9 @@ class Predict:
         # 평점 예측
         X = self.text_preprocess(review_init['review'])
         rating = float(self.model.predict(X))
-        if rating <= 0: rating = 0
-        elif rating >= 10: rating = 10 / 2
-        else: rating = rating / 2
+        if rating <= 0: rating = 0.0
+        elif rating >= 10: rating = 5.0
+        else: rating = round((rating / 2), 2)
 
         # 테이블에 다시 넣기
         sql = f'''

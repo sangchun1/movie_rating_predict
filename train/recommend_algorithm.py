@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import datetime
+from datetime import datetime
 from konlpy.tag import Okt
 from keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
@@ -97,41 +97,41 @@ class Recommend:
                 # genres = ', '.join(genres) # 문자열로 반환
         return genres
     
-    # # 배우
-    # def actor_model(self, actors):
-    #     X = actors['actor']
-    #     y = actors['rating']
+    # 배우
+    def actor_model(self, actors):
+        X = actors['actor']
+        y = actors['rating']
 
-    #     # 배우 리스트
-    #     X_lis = X.split(', ')
+        # 배우 리스트
+        X_lis = X.split(', ')
 
-    #     # 정수 인코딩
-    #     tokenizer = Tokenizer()
-    #     tokenizer.fit_on_texts(X_lis)
-    #     X = tokenizer.texts_to_sequences(X_lis)
+        # 정수 인코딩
+        tokenizer = Tokenizer()
+        tokenizer.fit_on_texts(X_lis)
+        X = tokenizer.texts_to_sequences(X_lis)
 
-    #     # 단어수
-    #     vocab_size = len(tokenizer.word_index)
+        # 단어수
+        vocab_size = len(tokenizer.word_index)
 
-    #     # 종속변수를 array로 변환
-    #     y = np.array(y)
+        # 종속변수를 array로 변환
+        y = np.array(y)
 
-    #     # 모델 생성
-    #     model = Sequential()
-    #     model.add(Embedding(vocab_size, 250))
-    #     model.add(LSTM(128))
-    #     model.add(Dropout(0.2))
-    #     model.add(Dense(1, activation='sigmoid'))
-    #     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+        # 모델 생성
+        model = Sequential()
+        model.add(Embedding(vocab_size, 250))
+        model.add(LSTM(128))
+        model.add(Dropout(0.2))
+        model.add(Dense(1, activation='sigmoid'))
+        model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
-    #     # 모델 학습
-    #     es = EarlyStopping(monitor='val_accuracy', mode='max', patience=3)
-    #     model.fit(X, y, batch_size=64, epochs=10, validation_split=0.2, callbacks=es)
+        # 모델 학습
+        es = EarlyStopping(monitor='val_accuracy', mode='max', patience=3)
+        model.fit(X, y, batch_size=64, epochs=10, validation_split=0.2, callbacks=es)
         
-    #     # 결과 시리즈로 저장
-    #     series = model.predict(X)
+        # 결과 시리즈로 저장
+        series = model.predict(X)
         
-    #     return series
+        return series
     
     # 줄거리
     def summary_model(self, summary):
@@ -212,7 +212,7 @@ class Recommend:
         # 결과 시리즈로 저장
         series = model.predict(X)
 
-        return series
+        return series.round(4)
     
     # 테이블을 조인하여 데이터 프레임으로 저장
     def table_to_df(self):
@@ -224,7 +224,7 @@ class Recommend:
         # 테이블을 조인하여 불러오기
         sql = f'''
         select u.movie_id movie_id, movie_totsale totsale, movie_attendance attendance, movie_screen screen, movie_screening screening, 
-        movie_date date, movie_world country, movie_genre genre, movie_time time, movie_director director, movie_summary summary, rating
+        movie_date date, movie_world country, movie_genre genre, movie_time runtime, movie_director director, movie_summary summary, rating
         from movie_info m, user_review u
         where u.movie_id = m.movie_id
         and user_id = {self.user_id}
@@ -246,17 +246,19 @@ class Recommend:
     
     # 학습을 위한 전처리
     def df_preprocess(self, df):
+        # 학습을 위해 미리 만든 함수들로 컬럼 변환
+        temp_lis = []
+        for i in df.index:
+            df.loc[i,'date'] = self.change_date(df.loc[i,'date'])
+            df.loc[i,'country'] = self.change_country(df.loc[i,'country'])
+            temp_lis.append(self.change_genre(df.loc[i,'genre']))
+        df['genre'] = temp_lis
+
         # 스케일링
         scaler = StandardScaler()
         scale_df = df[['totsale', 'attendance', 'screen', 'screening', 'date']]
         scale_df = pd.DataFrame(scaler.fit_transform(scale_df), columns=scale_df.columns)
         df = pd.concat([df.drop(scale_df.columns, axis=1), scale_df], axis=1)
-
-        # 학습을 위해 미리 만든 함수들로 컬럼 변환
-        for i in df.index:
-            df.loc[i,'date'] = self.change_date(df.loc[i,'date'])
-            df.loc[i,'country'] = self.change_country(df.loc[i,'country'])
-            df.loc[i,'genre'] = self.change_genre(df.loc[i,'genre'])
 
         # 텍스트 컬럼은 미리 선호도 학습
         # df['actor'] = self.actor_model(df[['actor', 'rating']])
@@ -325,6 +327,7 @@ class Recommend:
 
         # 예측
         lis = model.predict(X)
+        lis = lis.round(4) * 100
 
         # top5 리스트
         top5_lis = sorted(lis, reverse=True)[:5]
