@@ -1,13 +1,16 @@
 import pandas as pd
 import numpy as np
+import datetime
 from konlpy.tag import Okt
 from keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-from keras import models
-from keras import layers
+from keras.layers import Embedding, Dense, LSTM, Dropout
+from keras.models import Sequential
+from keras import models, layers
 from keras.callbacks import EarlyStopping
 from keras.models import load_model
-from datetime import datetime
+from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MultiLabelBinarizer
 
 class Recommend:
     def __init__(self, db, user_id):
@@ -94,30 +97,41 @@ class Recommend:
                 # genres = ', '.join(genres) # 문자열로 반환
         return genres
     
-    # 배우
-    def actor_model(self, actors):
-        X = actors['actor']
-        y = actors['rating']
+    # # 배우
+    # def actor_model(self, actors):
+    #     X = actors['actor']
+    #     y = actors['rating']
 
-        # 배우 리스트
-        X_lis = X.split(', ')
+    #     # 배우 리스트
+    #     X_lis = X.split(', ')
 
-        # 정수 인코딩
-        tokenizer = Tokenizer()
-        tokenizer.fit_on_texts(X_lis)
-        X = tokenizer.texts_to_sequences(X_lis)
+    #     # 정수 인코딩
+    #     tokenizer = Tokenizer()
+    #     tokenizer.fit_on_texts(X_lis)
+    #     X = tokenizer.texts_to_sequences(X_lis)
 
-        # 모델 생성
+    #     # 단어수
+    #     vocab_size = len(tokenizer.word_index)
 
+    #     # 종속변수를 array로 변환
+    #     y = np.array(y)
 
-        # 모델 학습
-        es = EarlyStopping(monitor='val_accuracy', mode='max', patience=3)
-        model.fit(X, y, batch_size=64, epochs=10, validation_split=0.2, callbacks=es)
+    #     # 모델 생성
+    #     model = Sequential()
+    #     model.add(Embedding(vocab_size, 250))
+    #     model.add(LSTM(128))
+    #     model.add(Dropout(0.2))
+    #     model.add(Dense(1, activation='sigmoid'))
+    #     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+
+    #     # 모델 학습
+    #     es = EarlyStopping(monitor='val_accuracy', mode='max', patience=3)
+    #     model.fit(X, y, batch_size=64, epochs=10, validation_split=0.2, callbacks=es)
         
-        # 결과 시리즈로 저장
-        series = model.predict(X)
+    #     # 결과 시리즈로 저장
+    #     series = model.predict(X)
         
-        return series
+    #     return series
     
     # 줄거리
     def summary_model(self, summary):
@@ -125,9 +139,9 @@ class Recommend:
         y = summary['rating']
 
         # 특수문자,기호 제거
-        X = X.replace("[^ㄱ-ㅎㅏ-ㅣ가-힣0-9 ]","")
+        X = X.replace("[^ㄱ-ㅎㅏ-ㅣ가-힣0-9 ]", "", regex=True)
         # 공백 제거
-        X = X.replace('^ +', "")
+        X = X.replace('^ +', "", regex=True)
         X.replace('', np.nan, inplace=True)
 
         # 불용어 사전
@@ -140,14 +154,38 @@ class Recommend:
         # 형태소 분석
         okt = Okt()
         X_lis = []
-        for sentence in X:
-            temp_X = okt.morphs(sentence, stem=True) # 토큰화
+        if isinstance(X, str):
+            X = [X]  # 문자열을 리스트로 변환
+        for i, sentence in enumerate(X):
+            try:
+                temp_X = okt.morphs(sentence, stem=True) # 토큰화
+            except:
+                print(i, sentence)
             temp_X = [word for word in temp_X if not word in stopwords] # 불용어 제거
             X_lis.append(temp_X)
-        
+
         # 정수 인코딩
         tokenizer = Tokenizer()
         tokenizer.fit_on_texts(X_lis)
+
+        # 출현빈도가 3회 미만인 단어들
+        threshold = 3
+        total_cnt = len(tokenizer.word_index) # 단어수
+        rare_cnt = 0
+        total_freq = 0
+        rare_freq = 0
+        for key, value in tokenizer.word_counts.items():
+            total_freq = total_freq + value
+            if(value < threshold):
+                rare_cnt = rare_cnt + 1
+                rare_freq = rare_freq + value
+
+        # 단어 집합의 크기
+        vocab_size = total_cnt - rare_cnt + 1
+
+        # 텍스트를 숫자 시퀀스로 변환
+        tokenizer = Tokenizer(vocab_size)
+        tokenizer.fit_on_texts(X_lis) 
         X = tokenizer.texts_to_sequences(X_lis)
 
         # 줄거리의 최대 길이
@@ -156,12 +194,20 @@ class Recommend:
         # 독립변수 패딩
         X = pad_sequences(X, maxlen=max_len)
 
-        # 모델 생성
+        # 종속변수를 array로 변환
+        y = np.array(y)
 
+        # 모델 생성
+        model = Sequential()
+        model.add(Embedding(vocab_size, 50))
+        model.add(LSTM(16))
+        model.add(Dropout(0.2))
+        model.add(Dense(1, activation='sigmoid'))
+        model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
 
         # 모델 학습
         es = EarlyStopping(monitor='val_accuracy', mode='max', patience=3)
-        model.fit(X, y, batch_size=64, epochs=10, validation_split=0.2, callbacks=es)
+        model.fit(X, y, batch_size=32, epochs=10, validation_split=0.2, callbacks=es)
         
         # 결과 시리즈로 저장
         series = model.predict(X)
@@ -178,7 +224,7 @@ class Recommend:
         # 테이블을 조인하여 불러오기
         sql = f'''
         select u.movie_id movie_id, movie_totsale totsale, movie_attendance attendance, movie_screen screen, movie_screening screening, 
-        movie_date date, movie_world country, movie_genre genre, movie_time time, movie_director director, movie_actor actor, movie_summary summary, rating
+        movie_date date, movie_world country, movie_genre genre, movie_time time, movie_director director, movie_summary summary, rating
         from movie_info m, user_review u
         where u.movie_id = m.movie_id
         and user_id = {self.user_id}
@@ -189,34 +235,50 @@ class Recommend:
         # 테이블을 데이터 프레임으로 저장
         df = pd.DataFrame(rows)
 
+        # 평점을 선호, 비선호로 변환
+        for i, rating in enumerate(df['rating']):
+            if rating > df.rating.mean():
+                df.loc[i, 'rating'] = 1
+            else:
+                df.loc[i, 'rating'] = 0
+
         return df
     
     # 학습을 위한 전처리
     def df_preprocess(self, df):
+        # 스케일링
+        scaler = StandardScaler()
+        scale_df = df[['totsale', 'attendance', 'screen', 'screening', 'date']]
+        scale_df = pd.DataFrame(scaler.fit_transform(scale_df), columns=scale_df.columns)
+        df = pd.concat([df.drop(scale_df.columns, axis=1), scale_df], axis=1)
+
+        # 학습을 위해 미리 만든 함수들로 컬럼 변환
         for i in df.index:
-            df.loc[i,'released_date'] = self.change_date(df.loc[i,'released_date'])
+            df.loc[i,'date'] = self.change_date(df.loc[i,'date'])
             df.loc[i,'country'] = self.change_country(df.loc[i,'country'])
             df.loc[i,'genre'] = self.change_genre(df.loc[i,'genre'])
 
-        # 국가 원핫인코딩
+        # 텍스트 컬럼은 미리 선호도 학습
+        # df['actor'] = self.actor_model(df[['actor', 'rating']])
+        df['summary'] = self.summary_model(df[['summary', 'rating']])
         
+        # 국가 원핫인코딩
+        df = pd.concat([df, (pd.get_dummies(df['country'], prefix="country"))], axis=1)
 
         # 장르 원핫인코딩
-
-
-        # 텍스트 컬럼은 미리 선호도 학습
-        df['actor'] = self.actor_model(df[['actor', 'rating']])
-        df['summary'] = self.summary_model(df[['summary', 'rating']])
-
-        # 스케일링
-
+        mlb = MultiLabelBinarizer()        
+        encoded_data = mlb.fit_transform(df['genre']) # 리스트를 원핫 인코딩으로 변환        
+        columns = ['{}_{}'.format('genre', label) for label in mlb.classes_] # 컬럼 이름 설정        
+        encoded_df = pd.DataFrame(encoded_data, columns=columns) # 원핫 인코딩된 데이터프레임 생성        
+        df = pd.concat([df.drop('genre', axis=1), encoded_df], axis=1) # 원본 데이터프레임과 원핫 인코딩된 데이터프레임 결합
 
         return df
 
     # 최종 선호도 학습
     def create_algorithm(self, df):
         # X, y로 분류
-        X = df.loc[:-1]
+        train_cols = [df.columns].remove('rating')
+        X = df[train_cols]
         y = df['rating']
         # y = df['rating_predict']
 
@@ -236,11 +298,9 @@ class Recommend:
     def recomment_top5(self):
         model = load_model(f'../model/recommend_for{self.user_id}.h5')
         
-        # 영화 정보 가져오기
-        # db 연결
-        conn = self.db
-        # 커서 생성
-        cursor = conn.cursor()
+        # 영화 정보 가져오기        
+        conn = self.db # db 연결        
+        cursor = conn.cursor() # 커서 생성
 
         # 모든 영화 정보 테이블 불러와 데이터프레임으로 저장
         sql = "select * from movie_info"
@@ -261,7 +321,7 @@ class Recommend:
         df = df[~df.isin(temp)].dropna()
 
         # 학습을 위한 전처리
-        X = self.df_preprocess(self, df)
+        X = self.df_preprocess(df)
 
         # 예측
         lis = model.predict(X)
